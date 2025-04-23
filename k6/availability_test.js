@@ -99,7 +99,7 @@ export function writeScenario() {
     const isAvailable = availableDoctors.some(d => d.id === doctor.id);
 
     if (!isAvailable) {
-        console.warn(`Доктор ${doctor.id} недоступен на ${appointmentDate}`);
+        //console.warn(`Доктор ${doctor.id} недоступен на ${appointmentDate}`);
         return;
     }
 
