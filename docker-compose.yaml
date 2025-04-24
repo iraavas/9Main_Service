@@ -1,32 +1,8 @@
 services:
-  database:
-    image: postgres:16.1-alpine
-    container_name: pg-database
-    restart: always
-    environment:
-      POSTGRES_USER: ${DB_USERNAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-      POSTGRES_DB: ${DB_NAME}
-    ports:
-      - "${DB_PORT}:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - app-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
   main-service:
     image: iraavas/9main-service
     container_name: spring-boot-app
     restart: always
-    depends_on:
-      database:
-        condition: service_healthy
     ports:
       - "${MAIN_SERVICE_PORT}:8081"
     networks:
@@ -39,11 +15,14 @@ services:
       DB_NAME: ${DB_NAME}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
-      SPRING_FLYWAY_ENABLED: true
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
-      SHOW_SQL: ${SHOW_SQL}
+      SPRING_JPA_SHOW_SQL: ${SHOW_SQL}
+      SPRING_FLYWAY_ENABLED: true
+      SPRING_FLYWAY_BASELINE_ON_MIGRATE: true
+      SERVER_PORT: ${MAIN_SERVICE_PORT}
       TOMCAT_THREADS: ${TOMCAT_THREADS}
 
+      # Observability
       STATISTICS_OBSERVABILITY: true
       OBSERVABILITY_INTERVALS: 10,30,60
       SERVICE_STATISTIC_OBSERVABILITY_DELAY: 5000
@@ -66,8 +45,10 @@ services:
       SERVER_PORT: ${ADDITIONAL_SERVICE_PORT}
       TOMCAT_THREADS: ${TOMCAT_THREADS}
 
-volumes:
-  postgres_data:
+      # Observability
+      STATISTICS_OBSERVABILITY: true
+      OBSERVABILITY_INTERVALS: 10,30,60
+      SERVICE_STATISTIC_OBSERVABILITY_DELAY: 5000
 
 networks:
   app-network:
