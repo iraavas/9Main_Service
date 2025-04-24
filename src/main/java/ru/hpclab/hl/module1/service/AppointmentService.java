@@ -11,8 +11,8 @@ import ru.hpclab.hl.module1.repository.AppointmentRepository;
 import ru.hpclab.hl.module1.repository.DoctorRepository;
 import ru.hpclab.hl.module1.repository.PatientRepository;
 import ru.hpclab.hl.module1.model.AppointmentStatus;
+import ru.hpclab.hl.module1.service.statistics.ObservabilityService;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,61 +23,67 @@ public class AppointmentService {
     private final AppointmentRepository appointmentRepository;
     private final PatientRepository patientRepository;
     private final DoctorRepository doctorRepository;
+    private final ObservabilityService observabilityService;
 
     public AppointmentService(AppointmentRepository appointmentRepository,
                               PatientRepository patientRepository,
-                              DoctorRepository doctorRepository) {
+                              DoctorRepository doctorRepository,
+                              ObservabilityService observabilityService) {
         this.appointmentRepository = appointmentRepository;
         this.patientRepository = patientRepository;
         this.doctorRepository = doctorRepository;
+        this.observabilityService = observabilityService;
     }
 
     public List<AppointmentDTO> getAllAppointments() {
-        return appointmentRepository.findAll().stream()
+        observabilityService.start("service.appointment.getAll");
+        List<AppointmentDTO> result = appointmentRepository.findAll().stream()
                 .map(AppointmentMapper::toDTO)
                 .collect(Collectors.toList());
+        observabilityService.stop("service.appointment.getAll");
+        return result;
     }
 
     public AppointmentDTO getAppointmentById(Long id) {
+        observabilityService.start("service.appointment.getById");
         Optional<AppointmentEntity> appointmentEntity = appointmentRepository.findById(id);
-        return appointmentEntity.map(AppointmentMapper::toDTO).orElse(null);
+        AppointmentDTO result = appointmentEntity.map(AppointmentMapper::toDTO).orElse(null);
+        observabilityService.stop("service.appointment.getById");
+        return result;
     }
 
     public AppointmentDTO saveAppointment(AppointmentDTO appointmentDTO) {
-        // Проверяем, существует ли пациент
+        observabilityService.start("service.appointment.save");
+
         PatientEntity patient = patientRepository.findById(appointmentDTO.getPatientId())
                 .orElseThrow(() -> new RuntimeException("Пациент не найден"));
 
-        // Проверяем, существует ли доктор
         DoctorEntity doctor = doctorRepository.findById(appointmentDTO.getDoctorId())
                 .orElseThrow(() -> new RuntimeException("Доктор не найден"));
 
-        // Проверяем, доступен ли врач по специализации на указанное время
         Long count = appointmentRepository.countAppointmentsForSpecializationAtTime(
                 appointmentDTO.getSpecialization(), appointmentDTO.getAppointmentDate());
         if (count > 0) {
+            observabilityService.stop("service.appointment.save");
             throw new DoctorException("Врач с специализацией " + appointmentDTO.getSpecialization() +
                     " уже занят в это время: " + appointmentDTO.getAppointmentDate());
         }
 
-        // Создаём запись
         AppointmentEntity appointmentEntity = AppointmentMapper.toEntity(appointmentDTO, patient, doctor);
-
-        // Устанавливаем статус по умолчанию
         appointmentEntity.setStatus(AppointmentStatus.SCHEDULED);
+        AppointmentDTO result = AppointmentMapper.toDTO(appointmentRepository.save(appointmentEntity));
 
-        return AppointmentMapper.toDTO(appointmentRepository.save(appointmentEntity));
-
+        observabilityService.stop("service.appointment.save");
+        return result;
     }
 
     public AppointmentDTO updateAppointment(Long id, AppointmentDTO appointmentDTO) {
-        return appointmentRepository.findById(id)
+        observabilityService.start("service.appointment.update");
+        AppointmentDTO result = appointmentRepository.findById(id)
                 .map(existingAppointment -> {
-                    // Проверяем, существует ли пациент
                     PatientEntity patient = patientRepository.findById(appointmentDTO.getPatientId())
                             .orElseThrow(() -> new RuntimeException("Пациент не найден"));
 
-                    // Проверяем, существует ли доктор
                     DoctorEntity doctor = doctorRepository.findById(appointmentDTO.getDoctorId())
                             .orElseThrow(() -> new RuntimeException("Доктор не найден"));
 
@@ -89,18 +95,13 @@ public class AppointmentService {
                     return AppointmentMapper.toDTO(appointmentRepository.save(existingAppointment));
                 })
                 .orElse(null);
+        observabilityService.stop("service.appointment.update");
+        return result;
     }
 
-    //public boolean isDoctorAvailable(String specialization, LocalDateTime appointmentDate) {
-        // Проверяем, доступен ли врач с нужной специализацией на указанное время
-    //   Long count = appointmentRepository.countAppointmentsForSpecializationAtTime(specialization, appointmentDate);
-    //   return count == 0; // если count > 0, значит врач занят
-    //}
-
-
-
-
     public void deleteAppointment(Long id) {
+        observabilityService.start("service.appointment.delete");
         appointmentRepository.deleteById(id);
+        observabilityService.stop("service.appointment.delete");
     }
 }

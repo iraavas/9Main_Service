@@ -44,6 +44,10 @@ services:
       SHOW_SQL: ${SHOW_SQL}
       TOMCAT_THREADS: ${TOMCAT_THREADS}
 
+      STATISTICS_OBSERVABILITY: true
+      OBSERVABILITY_INTERVALS: 10,30,60
+      SERVICE_STATISTIC_OBSERVABILITY_DELAY: 5000
+
   additional-service:
     image: iraavas/9additional-service
     container_name: additional-service

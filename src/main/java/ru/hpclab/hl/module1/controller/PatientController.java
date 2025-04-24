@@ -3,6 +3,7 @@ package ru.hpclab.hl.module1.controller;
 import org.springframework.web.bind.annotation.*;
 import ru.hpclab.hl.module1.dto.PatientDTO;
 import ru.hpclab.hl.module1.service.PatientService;
+import ru.hpclab.hl.module1.service.statistics.ObservabilityService;
 
 import java.util.List;
 
@@ -11,40 +12,49 @@ import java.util.List;
 public class PatientController {
 
     private final PatientService patientService;
+    private final ObservabilityService observabilityService;
 
-    // Внедрение через конструктор
-    public PatientController(PatientService patientService) {
+    public PatientController(PatientService patientService, ObservabilityService observabilityService) {
         this.patientService = patientService;
+        this.observabilityService = observabilityService;
     }
 
-    // Получить список всех пациентов
     @GetMapping
     public List<PatientDTO> getAllPatients() {
-        return patientService.getAllPatients();
-        // Возвращаем список DTO, аналогично вашему .stream().map(...) в примере
+        observabilityService.start("controller.patients.getAll");
+        List<PatientDTO> result = patientService.getAllPatients();
+        observabilityService.stop("controller.patients.getAll");
+        return result;
     }
 
-    // Получить одного пациента по ID
     @GetMapping("/{id}")
     public PatientDTO getPatientById(@PathVariable Long id) {
-        return patientService.getPatientById(id);
+        observabilityService.start("controller.patients.getById");
+        PatientDTO result = patientService.getPatientById(id);
+        observabilityService.stop("controller.patients.getById");
+        return result;
     }
 
-    // Создать пациента
     @PostMapping
     public PatientDTO addPatient(@RequestBody PatientDTO patientDTO) {
-        return patientService.savePatient(patientDTO);
+        observabilityService.start("controller.patients.add");
+        PatientDTO result = patientService.savePatient(patientDTO);
+        observabilityService.stop("controller.patients.add");
+        return result;
     }
 
-    // Обновить данные пациента
     @PutMapping("/{id}")
     public PatientDTO updatePatient(@PathVariable Long id, @RequestBody PatientDTO patientDTO) {
-        return patientService.updatePatient(id, patientDTO);
+        observabilityService.start("controller.patients.update");
+        PatientDTO result = patientService.updatePatient(id, patientDTO);
+        observabilityService.stop("controller.patients.update");
+        return result;
     }
 
-    // Удалить пациента
     @DeleteMapping("/{id}")
     public void deletePatient(@PathVariable Long id) {
+        observabilityService.start("controller.patients.delete");
         patientService.deletePatient(id);
+        observabilityService.stop("controller.patients.delete");
     }
 }
