@@ -1,6 +1,6 @@
 services:
   main-service:
-    image: iraavas/9main-service
+    image: iraavas/12main-service
     container_name: spring-boot-app
     restart: always
     ports:
