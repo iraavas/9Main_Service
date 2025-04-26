@@ -67,4 +67,5 @@ public class PatientService {
         patientRepository.deleteById(id);
         observabilityService.stop("service.patient.delete");
     }
+
 }

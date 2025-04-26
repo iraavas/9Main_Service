@@ -22,6 +22,12 @@ services:
       SERVER_PORT: ${MAIN_SERVICE_PORT}
       TOMCAT_THREADS: ${TOMCAT_THREADS}
 
+      # Kafka
+      KAFKA_HOSTS: ${KAFKA_HOSTS:-hl22.zil:9094,hl23.zil:9094}
+      KAFKA_GROUP_ID: ${KAFKA_GROUP_ID:-ivas-consumer-group}
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-var02}
+      KAFKA_CONCURRENCY: ${KAFKA_CONCURRENCY:-2}
+
       # Observability
       STATISTICS_OBSERVABILITY: true
       OBSERVABILITY_INTERVALS: 10,30,60

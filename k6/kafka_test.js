@@ -1,6 +1,14 @@
-import http from 'k6/http';
 import { check } from 'k6';
 import { randomItem } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
+import kafka from 'k6/x/kafka';
+import http from 'k6/http';
+
+const producer = new kafka.Producer({
+    brokers: [__ENV.KAFKA_BROKER || 'localhost:9092'],
+    clientId: 'k6-producer',
+});
+
+const topic = __ENV.KAFKA_TOPIC || 'module1-topic';
 
 export const options = {
     scenarios: {
@@ -38,13 +46,12 @@ const diagnosisMap = {
     'Стоматолог': ['Кариес', 'Пульпит'],
 };
 
-// Глобальная дата, которая будет сдвигаться
 let baseDate = new Date('2025-04-23');
 
 function getNextDateOnly() {
     const nextDate = new Date(baseDate);
     baseDate.setDate(baseDate.getDate() + 1);
-    return nextDate.toISOString().split('T')[0]; // YYYY-MM-DD
+    return nextDate.toISOString().split('T')[0];
 }
 
 function getNextDateTime() {
@@ -99,29 +106,29 @@ export function writeScenario() {
     const isAvailable = availableDoctors.some(d => d.id === doctor.id);
 
     if (!isAvailable) {
-        //console.warn(`Доктор ${doctor.id} недоступен на ${appointmentDate}`);
         return;
     }
 
-    const payload = JSON.stringify({
+    const payload = {
         patientId: patient.id,
         doctorId: doctor.id,
         appointmentDate,
         diagnosis,
         specialization
-    });
+    };
 
-    const res = http.post(`${baseUrl}/appointments`, payload, {
-        headers: { 'Content-Type': 'application/json' },
-        timeout,
-    });
+    const kafkaMessage = {
+        entity: "APPOINTMENT",
+        operation: "POST",
+        payload: payload
+    };
 
-    check(res, {
-        'POST /appointments — 201 or 200 or 400 or 409': (r) =>
-            r.status === 201 ||
-            r.status === 200 ||
-            r.status === 400 ||  // например, если врач не найден
-            r.status === 409     // если врач занят
-    });
-
+    try {
+        producer.produce({
+            topic: topic,
+            messages: [{ value: JSON.stringify(kafkaMessage) }],
+        });
+    } catch (err) {
+        console.error(`Kafka send error: ${err}`);
+    }
 }
