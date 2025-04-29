@@ -23,7 +23,7 @@ spec:
         - name: regcred
       containers:
         - name: main-service
-          image: iraavas/12main-service:latest
+          image: iraavas/16main-service:latest
           ports:
             - containerPort: 8081
           envFrom:
