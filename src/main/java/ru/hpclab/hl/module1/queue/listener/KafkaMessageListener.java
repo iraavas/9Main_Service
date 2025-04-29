@@ -22,7 +22,8 @@ public class KafkaMessageListener {
     @KafkaListener(
             topics = "${kafka.topic:var02_}",
             groupId = "${kafka.groupId:ivas-consumer-group}",
-            concurrency = "${kafka.concurrency:2}"
+            concurrency = "${kafka.concurrency:2}",
+            containerFactory = "kafkaListenerContainerFactory"
     )
     public void handleMessage(String messageJson) {
         try {

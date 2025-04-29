@@ -2,8 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: main-service
-  labels:
-    app: main-service
 spec:
   replicas: 1
   selector:
@@ -14,6 +12,13 @@ spec:
       labels:
         app: main-service
     spec:
+      hostAliases:
+        - ip: "10.60.3.27"
+          hostnames:
+            - "hl22.zil"
+        - ip: "10.60.3.28"
+          hostnames:
+            - "hl23.zil"
       imagePullSecrets:
         - name: regcred
       containers:
@@ -37,10 +42,6 @@ spec:
                 secretKeyRef:
                   name: db-credentials
                   key: password
-            - name: DB_HOST
-              value: "10.60.3.26"
-            - name: KAFKA_HOSTS
-              value: "10.60.3.27,10.60.3.28"
           resources:
             limits:
               cpu: "1"
