@@ -1,34 +1,37 @@
 import { check } from 'k6';
-import { randomItem } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
-import kafka from 'k6/x/kafka';
 import http from 'k6/http';
+import { randomItem } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
+import { Writer, SCHEMA_TYPE_STRING, SchemaRegistry } from 'k6/x/kafka';
 
-const producer = new kafka.Producer({
-    brokers: [__ENV.KAFKA_BROKER || 'localhost:9092'],
-    clientId: 'k6-producer',
+const topic = 'var02_'; // Жестко заданный топик
+const brokers = ['hl22.zil:9094']; // Жестко заданный брокер Kafka
+
+const writer = new Writer({
+    brokers: brokers,
+    topic: topic,
 });
 
-const topic = __ENV.KAFKA_TOPIC || 'module1-topic';
+const schemaRegistry = new SchemaRegistry();
 
 export const options = {
     scenarios: {
-        readers: {
-            executor: 'constant-vus',
-            vus: __ENV.VUS_READ ? parseInt(__ENV.VUS_READ) : 10,
-            duration: '1m',
-            exec: 'readScenario',
-        },
         writers: {
             executor: 'constant-vus',
             vus: __ENV.VUS_WRITE ? parseInt(__ENV.VUS_WRITE) : 5,
             duration: '1m',
             exec: 'writeScenario',
         },
+        readers: {
+            executor: 'constant-vus',
+            vus: __ENV.VUS_READ ? parseInt(__ENV.VUS_READ) : 10,
+            duration: '1m',
+            exec: 'readScenario',
+        },
     },
 };
 
-const baseUrl = __ENV.MAIN_SERVICE_URL || 'http://hl2.zil:8081';
-const additionalUrl = __ENV.ADDITIONAL_SERVICE_URL || 'http://hl2.zil:8082';
+const baseUrl = 'http://hl2.zil:8081';
+const additionalUrl = 'http://hl2.zil:8082';
 const timeout = '360s';
 
 const specializations = [
@@ -67,9 +70,9 @@ function fetchAll(url) {
 }
 
 export function readScenario() {
-    const spec = randomItem(specializations);
+    const specialization = randomItem(specializations);
     const date = getNextDateOnly();
-    const url = `${additionalUrl}/availability/check?specialization=${encodeURIComponent(spec)}&date=${date}`;
+    const url = `${additionalUrl}/availability/check?specialization=${encodeURIComponent(specialization)}&date=${date}`;
 
     const res = http.get(url, { timeout });
 
@@ -92,9 +95,8 @@ export function writeScenario() {
     const specialization = doctor.specialization;
     const diagnosis = randomItem(diagnosisMap[specialization] || ['Обследование']);
     const appointmentDate = getNextDateTime();
-    const date = appointmentDate.split('T')[0];
 
-    const checkUrl = `${additionalUrl}/availability/check?specialization=${encodeURIComponent(specialization)}&date=${date}`;
+    const checkUrl = `${additionalUrl}/availability/check?specialization=${encodeURIComponent(specialization)}&date=${appointmentDate.split('T')[0]}`;
     const availabilityRes = http.get(checkUrl, { timeout });
 
     if (availabilityRes.status !== 200) {
@@ -110,25 +112,33 @@ export function writeScenario() {
     }
 
     const payload = {
-        patientId: patient.id,
-        doctorId: doctor.id,
-        appointmentDate,
-        diagnosis,
-        specialization
-    };
-
-    const kafkaMessage = {
-        entity: "APPOINTMENT",
-        operation: "POST",
-        payload: payload
+        entity: 'APPOINTMENT',
+        operation: 'POST',
+        payload: {
+            patientId: patient.id,
+            doctorId: doctor.id,
+            appointmentDate,
+            diagnosis,
+            specialization,
+        },
     };
 
     try {
-        producer.produce({
-            topic: topic,
-            messages: [{ value: JSON.stringify(kafkaMessage) }],
+        writer.produce({
+            messages: [
+                {
+                    key: schemaRegistry.serialize({
+                        data: patient.id.toString(),
+                        schemaType: SCHEMA_TYPE_STRING,
+                    }),
+                    value: schemaRegistry.serialize({
+                        data: JSON.stringify(payload),
+                        schemaType: SCHEMA_TYPE_STRING,
+                    }),
+                },
+            ],
         });
     } catch (err) {
-        console.error(`Kafka send error: ${err}`);
+        console.error(`Ошибка отправки Kafka: ${err}`);
     }
 }

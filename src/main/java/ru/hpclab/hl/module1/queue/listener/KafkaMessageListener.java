@@ -20,7 +20,7 @@ public class KafkaMessageListener {
     private static final Logger log = LoggerFactory.getLogger(KafkaMessageListener.class);
 
     @KafkaListener(
-            topics = "${kafka.topic:var02}",
+            topics = "${kafka.topic:var02_}",
             groupId = "${kafka.groupId:ivas-consumer-group}",
             concurrency = "${kafka.concurrency:2}"
     )

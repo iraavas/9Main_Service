@@ -11,6 +11,7 @@ MAIN_PORT = os.getenv("MAIN_SERVICE_PORT", "8081")
 BASE_URL = f"http://{MAIN_HOST}:{MAIN_PORT}"
 
 
+
 def clear_all():
     requests.delete(f"{BASE_URL}/clear")
 

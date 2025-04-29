@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: additional-service
+  labels:
+    app: additional-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: additional-service
+  template:
+    metadata:
+      labels:
+        app: additional-service
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: additional-service
+          image: iraavas/9additional-service:latest
+          ports:
+            - containerPort: 8082
+          envFrom:
+            - configMapRef:
+                name: apps-config
+          env:
+            - name: DB_HOST
+              value: "10.60.3.26"
+            - name: KAFKA_HOSTS
+              value: "10.60.3.27,10.60.3.28"
+          resources:
+            limits:
+              cpu: "1"
+              memory: "1024Mi"
+            requests:
+              cpu: "1"
+              memory: "1024Mi"

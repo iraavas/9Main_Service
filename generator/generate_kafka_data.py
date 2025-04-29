@@ -97,7 +97,7 @@ def main():
     parser.add_argument("--specialization", type=str, help="Специализация врача для APPOINTMENT")
 
     args = parser.parse_args()
-    topic = "var02"
+    topic = "var02_"
 
     if args.operation == "POST":
         for _ in range(args.count):
