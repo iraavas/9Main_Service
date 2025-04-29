@@ -3,8 +3,8 @@ import http from 'k6/http';
 import { randomItem } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 import { Writer, SCHEMA_TYPE_STRING, SchemaRegistry } from 'k6/x/kafka';
 
-const topic = 'var02_'; // Жестко заданный топик
-const brokers = ['hl22.zil:9094']; // Жестко заданный брокер Kafka
+const topic = 'var02_';
+const brokers = ['10.60.3.27:9094', '10.60.3.28:9094'];
 
 const writer = new Writer({
     brokers: brokers,
@@ -30,8 +30,8 @@ export const options = {
     },
 };
 
-const baseUrl = 'http://hl2.zil:8081';
-const additionalUrl = 'http://hl2.zil:8082';
+const baseUrl = 'http://10.60.3.4:31081';
+const additionalUrl = 'http://10.60.3.4:31082';
 const timeout = '360s';
 
 const specializations = [
