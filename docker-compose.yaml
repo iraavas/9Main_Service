@@ -1,6 +1,6 @@
 services:
   main-service:
-    image: iraavas/16main-service
+    image: iraavas/17main-service
     container_name: spring-boot-app
     restart: always
     ports:
@@ -34,7 +34,7 @@ services:
       SERVICE_STATISTIC_OBSERVABILITY_DELAY: 5000
 
   additional-service:
-    image: iraavas/9additional-service
+    image: iraavas/16additional-service
     container_name: additional-service
     restart: always
     depends_on:
@@ -50,6 +50,17 @@ services:
       MAIN_SERVICE_PORT: ${MAIN_SERVICE_PORT}
       SERVER_PORT: ${ADDITIONAL_SERVICE_PORT}
       TOMCAT_THREADS: ${TOMCAT_THREADS}
+
+      # Retry
+      CORE_CRASH_DELAY: ${CORE_CRASH_DELAY:-10000}
+      RETRY_MAX_ATTEMPTS: ${RETRY_MAX_ATTEMPTS:-7}
+      RETRY_WAIT_DURATION: ${RETRY_WAIT_DURATION:-10s}
+
+       # CircuitBreaker (вариант 2)
+#      CIRCUITBREAKER_WAIT_DURATION_OPEN_STATE: ${CIRCUITBREAKER_WAIT_DURATION_OPEN_STATE:-10s}
+#      CIRCUITBREAKER_FAILURE_RATE_THRESHOLD: ${CIRCUITBREAKER_FAILURE_RATE_THRESHOLD:-50}
+#      CIRCUITBREAKER_SLIDING_WINDOW_SIZE: ${CIRCUITBREAKER_SLIDING_WINDOW_SIZE:-10}
+#      CIRCUITBREAKER_MIN_CALLS: ${CIRCUITBREAKER_MIN_CALLS:-5}
 
       # Observability
       STATISTICS_OBSERVABILITY: true

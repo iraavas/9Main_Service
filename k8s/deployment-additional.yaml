@@ -12,17 +12,41 @@ spec:
       labels:
         app: additional-service
     spec:
+      hostAliases:
+        - ip: "10.60.3.27"
+          hostnames:
+            - "hl22.zil"
+        - ip: "10.60.3.28"
+          hostnames:
+            - "hl23.zil"
       imagePullSecrets:
         - name: regcred
       containers:
         - name: additional-service
-          image: iraavas/9additional-service:latest
+          image: iraavas/17additional-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
           envFrom:
             - configMapRef:
                 name: apps-config
+
+          livenessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8082
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 2
+
+          readinessProbe:
+            httpGet:
+              path: /healthcheck
+              port: 8082
+            periodSeconds: 30
+            timeoutSeconds: 3
+            failureThreshold: 2
+
           resources:
             limits:
               cpu: "1"

@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: appointment-core-killer
+spec:
+  schedule: "*/1 * * * *"  # каждый 1 минута — минимально допустимо в Kubernetes
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: killer
+              image: curlimages/curl:latest  # компактный образ с curl
+              command:
+                - sh
+                - -c
+                - |
+                  echo "Killing Core Service..."
+                  curl -X POST http://main-service.default.svc.cluster.local:8081/crash
+
