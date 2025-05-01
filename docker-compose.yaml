@@ -1,6 +1,6 @@
 services:
   main-service:
-    image: iraavas/17main-service
+    image: iraavas/17_1main-service
     container_name: spring-boot-app
     restart: always
     ports:
@@ -34,7 +34,7 @@ services:
       SERVICE_STATISTIC_OBSERVABILITY_DELAY: 5000
 
   additional-service:
-    image: iraavas/16additional-service
+    image: iraavas/17_1additional-service
     container_name: additional-service
     restart: always
     depends_on:

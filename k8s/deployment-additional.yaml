@@ -23,7 +23,7 @@ spec:
         - name: regcred
       containers:
         - name: additional-service
-          image: iraavas/17additional-service:latest
+          image: iraavas/17_1additional-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
