@@ -23,10 +23,16 @@ spec:
         - name: regcred
       containers:
         - name: additional-service
-          image: iraavas/17_1additional-service:latest
+          image: iraavas/18additional-service:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: redis-password
           envFrom:
             - configMapRef:
                 name: apps-config
