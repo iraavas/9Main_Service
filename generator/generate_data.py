@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 fake = Faker("ru_RU")
 MAIN_HOST = os.getenv("MAIN_SERVICE_HOST", "localhost")
 MAIN_PORT = os.getenv("MAIN_SERVICE_PORT", "8081")
-BASE_URL = f"http://{MAIN_HOST}:{MAIN_PORT}"
+BASE_URL = "http://10.60.3.4:31081"
 
 
 
